@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import './globals.css'
+import '../../app/globals.css'
+import { Header } from '@/components/layout/Header'
+import { Sidebar } from '@/components/layout/Sidebar'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -20,7 +23,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased`}>{children}</body>
+      <body className={`${inter.variable} antialiased`}>
+        <AuthProvider>
+          <div className="flex">
+            <Sidebar />
+            <div className='flex flex-col w-full min-h-screen bg-gray-50'>
+              <Header />
+              {children}
+            </div>
+          </div>
+        </AuthProvider>
+      </body>
     </html>
   )
 }

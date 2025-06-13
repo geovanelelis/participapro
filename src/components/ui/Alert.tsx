@@ -1,5 +1,4 @@
 import { ReactNode } from 'react'
-import { motion } from 'framer-motion'
 
 interface AlertProps {
   children: ReactNode
@@ -18,7 +17,6 @@ export const Alert = ({
   className = '',
   onClose,
 }: AlertProps) => {
-  // Classes de variantes
   const variantClasses = {
     info: 'bg-blue-50 border-blue-200 text-blue-800',
     success: 'bg-green-50 border-green-200 text-green-800',
@@ -27,12 +25,7 @@ export const Alert = ({
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className={`rounded-lg border p-4 ${variantClasses[variant]} ${className}`}
-    >
+    <div className={`rounded-lg border p-4 ${variantClasses[variant]} ${className}`}>
       <div className="flex">
         {icon && <div className="flex-shrink-0 mr-3">{icon}</div>}
         <div className="flex-1">
@@ -56,6 +49,6 @@ export const Alert = ({
           </button>
         )}
       </div>
-    </motion.div>
+    </div>
   )
 }

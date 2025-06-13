@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import '../../app/globals.css'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
-import { AuthProvider } from '@/contexts/AuthContext'
+import { AuthProvider } from '@/contexts/authStore'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -27,9 +27,9 @@ export default function RootLayout({
         <AuthProvider>
           <div className="flex">
             <Sidebar />
-            <div className='flex flex-col w-full min-h-screen bg-gray-50'>
+            <div className=" ml-72 flex  min-h-screen relative w-full bg-gray-50">
               <Header />
-              {children}
+              <main className="pt-30 pb-20 px-6 max-w-7xl mx-auto">{children}</main>
             </div>
           </div>
         </AuthProvider>

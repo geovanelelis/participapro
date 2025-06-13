@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/Button'
 import { ArrowRight, Mail, Shield, Sparkles, Lock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/Card'
 import React, { useState } from 'react'
 import { Input } from '@/components/ui/Input'
@@ -17,7 +16,6 @@ export default function Home() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Simulação de autenticação
     const user = mockUsers.find((user) => user.email === email && user.password === password)
 
     if (user) {
@@ -35,27 +33,19 @@ export default function Home() {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="z-10 relative text-center mb-8">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              className="flex items-center justify-center mb-4"
-            >
+            <div className="flex items-center justify-center mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mr-3">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                 ParticipaPro
               </h1>
-            </motion.div>
+            </div>
             <p className="text-gray-600">Sistema de Monitoramento de Participação</p>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
+          {/* Seção de login */}
+          <div>
             <Card className="bg-white/80 backdrop-blur-md border border-white/20 shadow-xl">
               <CardContent className="p-8">
                 <div className="text-center mb-8">
@@ -134,15 +124,10 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
-          {/* Informações de demonstração */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-8 text-center"
-          >
+          {/* Credenciais de Demonstração */}
+          <div className="mt-8 text-center">
             <div className="bg-white/80 backdrop-blur-md border border-blue-200 rounded-2xl p-6">
               <p className="font-semibold text-blue-800 mb-3 flex items-center justify-center">
                 <Shield className="w-4 h-4 mr-2" />
@@ -161,7 +146,7 @@ export default function Home() {
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

@@ -16,7 +16,7 @@ import {
   ChevronDown,
   Sparkles,
 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/authStore'
 
 const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -38,7 +38,7 @@ export const Sidebar = () => {
   const handleNav = (path: string) => router.push(path)
 
   return (
-    <aside className="w-72 bg-gradient-to-b from-blue-600 to-blue-800 text-white p-6 flex flex-col justify-between min-h-screen">
+    <aside className="fixed w-72 h-screen bg-gradient-to-b from-blue-600 to-blue-800 text-white p-6 flex flex-col justify-between">
       <div>
         <div className="flex items-center space-x-3 mb-10">
           <div className="bg-white/20 rounded-xl p-2">

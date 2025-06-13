@@ -1,7 +1,7 @@
 'use client'
 
 import { Bell, Search } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/authStore'
 import { usePathname, useRouter } from 'next/navigation'
 
 export const Header = () => {
@@ -22,7 +22,7 @@ export const Header = () => {
   }
 
   return (
-    <header className="flex justify-between items-center px-6 py-4 bg-white border-b border-gray-200 shadow-sm">
+    <header className="fixed top-0 left-72 w-[calc(100%-theme(width.72))] px-6 py-4 bg-white border-b border-gray-200 shadow-sm z-50 flex justify-between items-center ">
       <div className="flex items-center space-x-3">
         <h1 className="text-2xl font-bold text-gradient flex items-center">
           {pageTitles[pathname] ?? 'ParticipaPro'}

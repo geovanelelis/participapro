@@ -111,7 +111,7 @@ export default function Dashboard() {
     <div className="space-y-8 animate-fade-in">
       {/* Seção Header Hero */}
       <div className="relative overflow-hidden">
-        <div className="card-modern bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white relative">
+        <div className="card-modern bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-2xl text-white relative">
           <div className="relative z-10 p-8 lg:p-12">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
               <div className="mb-6 lg:mb-0">

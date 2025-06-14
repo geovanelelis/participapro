@@ -5,6 +5,9 @@ export const mockUsers = [
     email: 'admin@participapro.com',
     password: 'admin123',
     role: 'admin',
+    phone: '(31) 9 8765-4321',
+    department: 'Administração',
+    location: 'Belo Horizonte, MG',
     position: 'Coordenador de Eventos',
     notificationPreferences: {
       email: true,

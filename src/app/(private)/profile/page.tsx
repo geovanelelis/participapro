@@ -5,48 +5,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { useAuth } from '@/contexts/authStore'
 import { useRouter } from 'next/navigation'
 import {
-  User,
   Mail,
-  Phone,
   MapPin,
-  Building,
   Calendar,
   Shield,
   Camera,
   Edit3,
-  Save,
-  X,
   Bell,
   Lock,
   Globe,
-  Palette,
   Activity,
-  Award,
   Clock,
   Eye,
   Settings,
   UserCheck,
-  Briefcase,
   Star,
   BarChart3,
   Users,
   ActivityIcon,
 } from 'lucide-react'
-import { useState } from 'react'
 
 export default function ProfilePage() {
   const router = useRouter()
   const { user } = useAuth()
-  const [isEditing, setIsEditing] = useState(false)
-  const [editData, setEditData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    position: user?.position || '',
-    department: user?.department || '',
-    location: user?.location || '',
-    bio: user?.bio || '',
-  })
 
   const profileStats = [
     {

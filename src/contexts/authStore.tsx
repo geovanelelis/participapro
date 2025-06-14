@@ -14,7 +14,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User>(mockUsers[0])
+  const [user, setUser] = useState<User | null>(mockUsers[0])
 
   const login = (email: string, password: string) => {
     const foundUser = mockUsers.find((user) => user.email === email && user.password === password)

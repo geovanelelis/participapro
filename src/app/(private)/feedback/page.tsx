@@ -160,7 +160,7 @@ export default function FeedbackPage() {
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
       <div className="relative overflow-hidden">
-        <div className="card-modern bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 rounded-2xl text-white relative">
+        <div className="card-modern bg-gradient-to-br from-yellow-500 via-yellow-600 to-yellow-700 rounded-2xl text-white relative">
           <div className="relative z-10 p-8 lg:p-12">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
               <div className="mb-6 lg:mb-0">
@@ -170,12 +170,12 @@ export default function FeedbackPage() {
                   </div>
                   <div>
                     <h1 className="text-4xl lg:text-5xl font-bold mb-2">Análise de Feedback</h1>
-                    <p className="text-purple-100 text-lg">
+                    <p className="text-yellow-100 text-lg">
                       Monitore satisfação e melhore experiências
                     </p>
                   </div>
                 </div>
-                <p className="text-purple-100 text-lg leading-relaxed max-w-lg">
+                <p className="text-yellow-100 text-lg leading-relaxed max-w-lg">
                   Colete, analise e responda feedbacks para aprimorar seus eventos
                 </p>
               </div>
@@ -223,7 +223,7 @@ export default function FeedbackPage() {
         <Card className="card-modern border-0">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-gray-800 flex items-center">
-              <BarChart3 className="w-5 h-5 mr-2 text-purple-600" />
+              <BarChart3 className="w-5 h-5 mr-2 text-yellow-600" />
               Distribuição de Avaliações
             </CardTitle>
           </CardHeader>
@@ -242,7 +242,7 @@ export default function FeedbackPage() {
                       boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
                     }}
                   />
-                  <Bar dataKey="count" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" fill="#e5a734" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -252,7 +252,7 @@ export default function FeedbackPage() {
         <Card className="card-modern border-0">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-gray-800 flex items-center">
-              <TrendingUp className="w-5 h-5 mr-2 text-purple-600" />
+              <TrendingUp className="w-5 h-5 mr-2 text-yellow-600" />
               Análise de Sentimento
             </CardTitle>
           </CardHeader>
@@ -329,7 +329,7 @@ export default function FeedbackPage() {
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-purple-100 text-purple-700 font-bold rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-yellow-100 text-yellow-700 font-bold rounded-full flex items-center justify-center">
                   {fb.avatar}
                 </div>
                 <div>

@@ -112,3 +112,62 @@ export const mockContacts = [
     avatar: 'CO',
   },
 ]
+
+export const mockFeedbacks = [
+  {
+    id: 1,
+    author: 'João Silva',
+    event: 'Festival Gastronômico',
+    rating: 5,
+    comment:
+      'Excelente evento! A organização foi impecável e os pratos estavam deliciosos. Recomendo fortemente para próximas edições.',
+    date: '2025-06-10',
+    category: 'Organização',
+    status: 'pending',
+    sentiment: 'positive',
+    helpful: 12,
+    avatar: 'JS',
+  },
+  {
+    id: 2,
+    author: 'Maria Santos',
+    event: 'Feira de Negócios',
+    rating: 4,
+    comment:
+      'Bom evento para networking, mas poderia ter mais palestras técnicas. O local era adequado.',
+    date: '2025-06-08',
+    category: 'Conteúdo',
+    status: 'reviewed',
+    sentiment: 'neutral',
+    helpful: 8,
+    avatar: 'MS',
+  },
+  {
+    id: 3,
+    author: 'Carlos Oliveira',
+    event: 'Expo Turismo',
+    rating: 2,
+    comment:
+      'Evento abaixo das expectativas. Poucos expositores e organização confusa. Esperava mais qualidade.',
+    date: '2025-06-06',
+    category: 'Organização',
+    status: 'responded',
+    sentiment: 'negative',
+    helpful: 15,
+    avatar: 'CO',
+  },
+  {
+    id: 4,
+    author: 'Ana Costa',
+    event: 'Festival Gastronômico',
+    rating: 5,
+    comment:
+      'Experiência incrível! Os chefs eram muito talentosos e a variedade de comidas foi surpreendente.',
+    date: '2025-06-05',
+    category: 'Qualidade',
+    status: 'pending',
+    sentiment: 'positive',
+    helpful: 20,
+    avatar: 'AC',
+  },
+]

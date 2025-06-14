@@ -251,7 +251,7 @@ export default function Integrations() {
                   <Link className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-4xl font-bold mb-2">Integrações</h1>
+                  <h1 className="text-4xl lg:text-5xl font-bold mb-2">Integrações</h1>
                   <p className="text-purple-100 text-lg">
                     Conecte o ParticipaPro com suas ferramentas favoritas
                   </p>

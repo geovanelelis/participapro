@@ -3,6 +3,7 @@
 import { Bell, Search } from 'lucide-react'
 import { useAuth } from '@/contexts/authStore'
 import { usePathname, useRouter } from 'next/navigation'
+import { useNotificationStore } from '@/contexts/notificationStore'
 
 export const Header = () => {
   const { user } = useAuth()
@@ -46,7 +47,7 @@ export const Header = () => {
         >
           <Bell size={20} className="text-gray-600 group-hover:text-blue-600 transition-colors" />
           <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center shadow-lg font-semibold">
-            9+
+            {useNotificationStore.getState().notifications.length}
           </span>
         </div>
 

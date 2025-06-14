@@ -127,7 +127,7 @@ export default function NotificationsPage() {
                     <Bell className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-4xl font-bold mb-2">Notificações</h1>
+                    <h1 className="text-4xl lg:text-5xl font-bold mb-2">Notificações</h1>
                     <p className="text-blue-100 text-lg">
                       Mantenha-se atualizado sobre seus eventos
                     </p>

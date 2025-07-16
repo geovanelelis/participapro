@@ -2,403 +2,432 @@
 
 import { Badge } from '@/components/ui/Badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { useEventStore } from '@/contexts/eventStore'
 import {
-  BarChart3,
-  Download,
   FileText,
-  Filter,
-  PieChart,
-  Target,
-  TrendingUp,
+  Calendar,
+  MapPin,
   Users,
-  ArrowUpRight,
-  ArrowDownRight,
-  AlertCircle,
+  TrendingUp,
   CheckCircle,
+  Edit,
+  Download,
+  Plus,
+  Eye,
+  BarChart3,
 } from 'lucide-react'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Line,
-  LineChart,
-  Pie,
-  PieChart as RechartsPieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { useState } from 'react'
+import { useAuth } from '@/contexts/authStore'
+import ReportModal from '@/components/ui/ReportModal'
+import EventResultsModal from '@/components/ui/EventResultsModal'
 
-export default function Reports() {
-  const reportTypes = [
-    {
-      title: 'Relatório Executivo',
-      description: 'Visão geral completa dos eventos',
-      icon: <BarChart3 className="w-6 h-6" />,
-      color: 'bg-slate-500',
-      textColor: 'text-slate-600',
-      bgColor: 'bg-slate-50',
-    },
-    {
-      title: 'Esperado vs Alcançado',
-      description: 'Comparativo de expectativas e resultados',
-      icon: <Target className="w-6 h-6" />,
-      color: 'bg-green-500',
-      textColor: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-    {
-      title: 'Análise de Participantes',
-      description: 'Métricas detalhadas dos participantes',
-      icon: <Users className="w-6 h-6" />,
-      color: 'bg-purple-500',
-      textColor: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-    },
-    {
-      title: 'Tendências Temporais',
-      description: 'Evolução dos indicadores ao longo do tempo',
-      icon: <TrendingUp className="w-6 h-6" />,
-      color: 'bg-orange-500',
-      textColor: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-    },
-  ]
+interface EventReport {
+  eventId: string
+  actualParticipants: number
+  satisfactionScore: number
+  keyTakeaways: string[]
+  nextSteps: string[]
+  additionalNotes: string
+  reportDate: string
+}
 
-  const performanceData = [
-    { evento: 'Festival Gastronômico', esperado: 500, alcancado: 650, satisfacao: 4.8 },
-    { evento: 'Feira de Artesanato', esperado: 300, alcancado: 280, satisfacao: 4.2 },
-    { evento: 'Congresso de Turismo', esperado: 800, alcancado: 920, satisfacao: 4.6 },
-    { evento: 'Mostra Cultural', esperado: 400, alcancado: 380, satisfacao: 4.4 },
-    { evento: 'Workshop de Negócios', esperado: 150, alcancado: 175, satisfacao: 4.7 },
-  ]
+export default function ReportsPage() {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
+  const isParticipante = user?.role === 'participante'
+  const { events } = useEventStore()
 
-  const monthlyTrends = [
-    { mes: 'Jan', eventos: 4, participantes: 1200, conversao: 65 },
-    { mes: 'Fev', eventos: 3, participantes: 980, conversao: 62 },
-    { mes: 'Mar', eventos: 5, participantes: 1800, conversao: 68 },
-    { mes: 'Abr', eventos: 7, participantes: 2500, conversao: 72 },
-    { mes: 'Mai', eventos: 5, participantes: 1900, conversao: 70 },
-    { mes: 'Jun', eventos: 6, participantes: 2200, conversao: 75 },
-  ]
+  const [eventReports, setEventReports] = useState<EventReport[]>([])
+  const [selectedEvent, setSelectedEvent] = useState<any>(null)
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const [isResultsModalOpen, setIsResultsModalOpen] = useState(false)
 
-  const categoryDistribution = [
-    { name: 'B2B', value: 45, color: '#3B82F6' },
-    { name: 'B2C', value: 35, color: '#10B981' },
-    { name: 'Interno', value: 20, color: '#F59E0B' },
-  ]
+  const completedEvents = events.filter((event) => event.status === 'completed')
 
-  const kpiCards = [
-    {
-      title: 'Taxa de Sucesso',
-      value: '87%',
-      change: '+12%',
-      trend: 'up',
-      icon: <CheckCircle className="w-5 h-5" />,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-    {
-      title: 'Média de Participantes',
-      value: '340',
-      change: '+23',
-      trend: 'up',
-      icon: <Users className="w-5 h-5" />,
-      color: 'text-slate-600',
-      bgColor: 'bg-slate-50',
-    },
-    {
-      title: 'ROI Médio',
-      value: '2.4x',
-      change: '+0.3x',
-      trend: 'up',
-      icon: <TrendingUp className="w-5 h-5" />,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-    },
-    {
-      title: 'Eventos Pendentes',
-      value: '3',
-      change: '-2',
-      trend: 'down',
-      icon: <AlertCircle className="w-5 h-5" />,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-    },
-  ]
+  const userCompletedEvents = isParticipante
+    ? completedEvents.filter((event) => {
+        return ['event-1', 'event-2'].includes(event.id) || Math.random() > 0.5
+      })
+    : completedEvents
+
+  const handleCreateReport = (event: any) => {
+    setSelectedEvent(event)
+    setIsReportModalOpen(true)
+  }
+
+  const handleEditReport = (event: any) => {
+    setSelectedEvent(event)
+    setIsReportModalOpen(true)
+  }
+
+  const handleViewResults = (event: any) => {
+    setSelectedEvent(event)
+    setIsResultsModalOpen(true)
+  }
+
+  const handleSaveReport = (report: EventReport) => {
+    const existingIndex = eventReports.findIndex((r) => r.eventId === report.eventId)
+
+    if (existingIndex >= 0) {
+      const updatedReports = [...eventReports]
+      updatedReports[existingIndex] = report
+      setEventReports(updatedReports)
+    } else {
+      setEventReports([...eventReports, report])
+    }
+
+    alert('Relatório salvo com sucesso!')
+  }
+
+  const getEventReport = (eventId: string) => {
+    return eventReports.find((report) => report.eventId === eventId)
+  }
+
+  const handleExportReport = (eventId: string) => {
+    const report = getEventReport(eventId)
+    const event = events.find((e) => e.id === eventId)
+
+    if (!report || !event) {
+      alert('Relatório não encontrado.')
+      return
+    }
+
+    const reportData = {
+      evento: event.name,
+      data: `${new Date(event.startDate).toLocaleDateString('pt-BR')} - ${new Date(
+        event.endDate
+      ).toLocaleDateString('pt-BR')}`,
+      local: event.location,
+      participantesEsperados: 'N/A',
+      participantesReais: report.actualParticipants,
+      satisfacao: report.satisfactionScore,
+      aprendizados: report.keyTakeaways,
+      proximosPassos: report.nextSteps,
+      observacoes: report.additionalNotes,
+    }
+
+    console.log('Dados do relatório para exportação:', reportData)
+    alert('Relatório exportado! (Verifique o console para ver os dados)')
+  }
+
+  const handleExportAllReports = () => {
+    if (eventReports.length === 0) {
+      alert('Nenhum relatório disponível para exportação.')
+      return
+    }
+
+    const allReportsData = eventReports.map((report) => {
+      const event = events.find((e) => e.id === report.eventId)
+      return {
+        evento: event?.name || 'Evento não encontrado',
+        data: event
+          ? `${new Date(event.startDate).toLocaleDateString('pt-BR')} - ${new Date(
+              event.endDate
+            ).toLocaleDateString('pt-BR')}`
+          : 'N/A',
+        local: event?.location || 'N/A',
+        participantesReais: report.actualParticipants,
+        satisfacao: report.satisfactionScore,
+        aprendizados: report.keyTakeaways,
+        proximosPassos: report.nextSteps,
+        observacoes: report.additionalNotes,
+      }
+    })
+
+    console.log('Dados de todos os relatórios para exportação:', allReportsData)
+    alert('Todos os relatórios exportados! (Verifique o console para ver os dados)')
+  }
 
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
       <div className="relative overflow-hidden">
-        <div className="card-modern bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 rounded-2xl text-white relative">
+        <div className="card-modern bg-gradient-to-br from-green-600 via-green-700 to-green-800 rounded-2xl text-white relative">
           <div className="relative z-10 p-8 lg:p-12">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
               <div className="mb-6 lg:mb-0">
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mr-4 backdrop-blur-sm">
-                    <BarChart3 className="w-6 h-6 text-white" />
+                    <FileText className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-4xl lg:text-5xl font-bold mb-2">Relatórios & Analytics</h1>
+                    <h1 className="text-4xl lg:text-5xl font-bold mb-2">
+                      {isAdmin ? 'Relatórios de Eventos' : 'Resultados dos Eventos'}
+                    </h1>
                     <p className="text-green-100 text-lg">
-                      Análises detalhadas de performance e resultados dos eventos
+                      {isAdmin
+                        ? 'Gere relatórios detalhados dos eventos concluídos'
+                        : 'Visualize os resultados dos eventos que você participou'}
                     </p>
                   </div>
                 </div>
                 <p className="text-green-100 text-lg leading-relaxed max-w-lg">
-                  Organize contatos de eventos, monitore interações e fortaleça parcerias
+                  {isAdmin
+                    ? 'Documente resultados, aprendizados e próximos passos para cada evento finalizado.'
+                    : 'Acompanhe o desempenho e os resultados dos eventos em que você participou.'}
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-3 rounded-xl transition-all duration-300">
-                  <Filter className="w-4 h-4" />
-                  <span>Filtros</span>
-                </button>
-                <button className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-3 rounded-xl transition-all duration-300">
-                  <Download className="w-4 h-4" />
-                  <span>Exportar</span>
-                </button>
-              </div>
+
+              {isAdmin && (
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={handleExportAllReports}
+                    className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-3 rounded-xl transition-all duration-300 text-white font-medium"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Exportar Todos</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* Estatísticas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {kpiCards.map((kpi, index) => (
-          <Card key={index} className="card-modern card-hover border-0">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-2xl ${kpi.bgColor} ${kpi.color}`}>{kpi.icon}</div>
-                <div
-                  className={`flex items-center space-x-1 ${
-                    kpi.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                  }`}
-                >
-                  {kpi.trend === 'up' ? (
-                    <ArrowUpRight className="w-4 h-4" />
-                  ) : (
-                    <ArrowDownRight className="w-4 h-4" />
-                  )}
-                  <span className="text-sm font-semibold">{kpi.change}</span>
-                </div>
+        <Card className="card-modern border-0 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-5"></div>
+          <CardContent className="p-6 relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-2xl bg-blue-50 text-blue-600">
+                <CheckCircle className="w-6 h-6" />
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">{kpi.title}</p>
-                <h3 className="text-3xl font-bold text-gray-900">{kpi.value}</h3>
+              <div className="text-right">
+                <span className="text-3xl font-bold text-gray-900">
+                  {userCompletedEvents.length}
+                </span>
+                <p className="text-sm text-gray-600">
+                  {isAdmin ? 'Eventos Concluídos' : 'Eventos Participados'}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Tipos de Relatório */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Tipos de Relatório</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {reportTypes.map((report, index) => (
-            <Card key={index} className="card-modern card-hover border-0 cursor-pointer group">
-              <CardContent className="p-6 text-center">
-                <div
-                  className={`inline-flex p-4 rounded-2xl ${report.bgColor} ${report.textColor} mb-4 group-hover:scale-110 transition-transform duration-300`}
-                >
-                  {report.icon}
+        <Card className="card-modern border-0 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-5"></div>
+          <CardContent className="p-6 relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-2xl bg-green-50 text-green-600">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div className="text-right">
+                <span className="text-3xl font-bold text-gray-900">{eventReports.length}</span>
+                <p className="text-sm text-gray-600">
+                  {isAdmin ? 'Relatórios Gerados' : 'Resultados Disponíveis'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {isAdmin && (
+          <>
+            <Card className="card-modern border-0 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500 to-yellow-600 opacity-5"></div>
+              <CardContent className="p-6 relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-2xl bg-yellow-50 text-yellow-600">
+                    <BarChart3 className="w-6 h-6" />
+                  </div>
+                  <div className="text-right">
+                    <span className="text-3xl font-bold text-gray-900">
+                      {completedEvents.length - eventReports.length}
+                    </span>
+                    <p className="text-sm text-gray-600">Pendentes</p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">{report.title}</h3>
-                <p className="text-sm text-gray-600 mb-4">{report.description}</p>
-                <button className="w-full bg-gradient-to-r from-slate-500 to-slate-600 text-white py-2 px-4 rounded-lg hover:from-slate-600 hover:to-slate-700 transition-all duration-300 flex items-center justify-center space-x-2">
-                  <FileText className="w-4 h-4" />
-                  <span>Gerar</span>
-                </button>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      </div>
 
-      {/* Gráficos de Análise */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Performance Esperado vs Alcançado */}
-        <Card className="card-modern border-0">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-800 flex items-center">
-              <Target className="w-5 h-5 mr-2 text-slate-600" />
-              Esperado vs Alcançado
-            </CardTitle>
-            <p className="text-sm text-gray-600">Comparativo de expectativas e resultados</p>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={performanceData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                  <XAxis
-                    dataKey="evento"
-                    stroke="#6B7280"
-                    fontSize={10}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis stroke="#6B7280" fontSize={12} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '12px',
-                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
-                    }}
-                  />
-                  <Bar dataKey="esperado" fill="#94A3B8" name="Esperado" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="alcancado" fill="#3B82F6" name="Alcançado" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tendências Mensais */}
-        <Card className="card-modern border-0">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-800 flex items-center">
-              <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
-              Tendências Mensais
-            </CardTitle>
-            <p className="text-sm text-gray-600">Evolução de participantes e conversão</p>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyTrends}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                  <XAxis dataKey="mes" stroke="#6B7280" fontSize={12} />
-                  <YAxis stroke="#6B7280" fontSize={12} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '12px',
-                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="participantes"
-                    stroke="#10B981"
-                    strokeWidth={3}
-                    dot={{ fill: '#10B981', strokeWidth: 2, r: 6 }}
-                    name="Participantes"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="conversao"
-                    stroke="#8B5CF6"
-                    strokeWidth={3}
-                    dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 6 }}
-                    name="Taxa de Conversão (%)"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Distribuição por Categoria e Lista de Eventos */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Distribuição por Categoria */}
-        <Card className="card-modern border-0">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-gray-800 flex items-center">
-              <PieChart className="w-5 h-5 mr-2 text-purple-600" />
-              Distribuição por Tipo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart>
-                  <Pie
-                    data={categoryDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {categoryDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex justify-center space-x-4 mt-4">
-              {categoryDistribution.map((item, index) => (
-                <div key={index} className="flex items-center">
-                  <div
-                    className="w-3 h-3 rounded-full mr-2"
-                    style={{ backgroundColor: item.color }}
-                  ></div>
-                  <span className="text-sm text-gray-600">{item.name}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Lista de Relatórios Recentes */}
-        <div className="lg:col-span-2">
-          <Card className="card-modern border-0">
-            <CardHeader>
-              <CardTitle className="text-lg font-bold text-gray-800 flex items-center">
-                <FileText className="w-5 h-5 mr-2 text-slate-600" />
-                Relatórios Recentes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {performanceData.slice(0, 4).map((event, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-br from-slate-500 to-slate-600 rounded-xl flex items-center justify-center text-white font-semibold text-sm mr-3">
-                        {event.evento.charAt(0)}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-800">{event.evento}</h4>
-                        <p className="text-xs text-gray-600">
-                          {event.alcancado} participantes • Satisfação {event.satisfacao}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge
-                        className={`badge-modern ${
-                          event.alcancado >= event.esperado ? 'badge-green' : 'badge-yellow'
-                        }`}
-                      >
-                        {event.alcancado >= event.esperado ? 'Meta atingida' : 'Abaixo da meta'}
-                      </Badge>
-                      <button className="text-slate-600 hover:text-slate-800 transition-colors p-2 hover:bg-slate-50 rounded-lg">
-                        <Download className="w-4 h-4" />
-                      </button>
-                    </div>
+            <Card className="card-modern border-0 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-5"></div>
+              <CardContent className="p-6 relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-2xl bg-purple-50 text-purple-600">
+                    <TrendingUp className="w-6 h-6" />
                   </div>
-                ))}
-              </div>
+                  <div className="text-right">
+                    <span className="text-3xl font-bold text-gray-900">
+                      {eventReports.length > 0
+                        ? (
+                            eventReports.reduce(
+                              (acc, report) => acc + report.satisfactionScore,
+                              0
+                            ) / eventReports.length
+                          ).toFixed(1)
+                        : '0.0'}
+                    </span>
+                    <p className="text-sm text-gray-600">Satisfação Média</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </div>
+
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-gray-800">
+          {isAdmin ? 'Eventos Concluídos' : 'Meus Eventos Concluídos'}
+        </h2>
+
+        {userCompletedEvents.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {userCompletedEvents.map((event) => {
+              const startDate = new Date(event.startDate)
+              const endDate = new Date(event.endDate)
+              const formattedStartDate = startDate.toLocaleDateString('pt-BR')
+              const formattedEndDate = endDate.toLocaleDateString('pt-BR')
+              const hasReport = getEventReport(event.id)
+
+              return (
+                <Card
+                  key={event.id}
+                  className="card-modern border-0 hover:shadow-lg transition-all duration-300 group"
+                >
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-start mb-2">
+                          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mr-3">
+                            {event.name.charAt(0)}
+                          </div>
+                          <h3 className="font-bold text-gray-900 text-lg group-hover:text-green-600 transition-colors">
+                            {event.name}
+                          </h3>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge
+                          className={`badge-modern ${
+                            event.type === 'B2B' ? 'badge-blue' : 'badge-green'
+                          }`}
+                        >
+                          {event.type}
+                        </Badge>
+                        <Badge className="badge-modern badge-green">Concluído</Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        <span>
+                          {formattedStartDate} - {formattedEndDate}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        <span className="truncate">{event.location}</span>
+                      </div>
+
+                      {hasReport && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Users className="w-4 h-4 mr-2" />
+                          <span>{hasReport.actualParticipants} participantes</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100">
+                      <p className="text-sm text-gray-600 line-clamp-2 mb-4">{event.description}</p>
+
+                      <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                        <p className="text-xs font-semibold text-gray-700 mb-1">
+                          Resultados esperados:
+                        </p>
+                        <p className="text-xs text-gray-600">{event.expectedResults}</p>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        {isAdmin ? (
+                          // Botões para Admin
+                          !hasReport ? (
+                            <button
+                              onClick={() => handleCreateReport(event)}
+                              className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center justify-center space-x-2"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span>Criar Relatório</span>
+                            </button>
+                          ) : (
+                            <div className="flex space-x-2 w-full">
+                              <button
+                                onClick={() => handleEditReport(event)}
+                                className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-1"
+                              >
+                                <Edit className="w-4 h-4" />
+                                <span>Editar</span>
+                              </button>
+                              <button
+                                onClick={() => handleExportReport(event.id)}
+                                className="flex-1 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center space-x-1"
+                              >
+                                <Download className="w-4 h-4" />
+                                <span>Exportar</span>
+                              </button>
+                            </div>
+                          )
+                        ) : (
+                          // Botões para Participante
+                          <button
+                            onClick={() => handleViewResults(event)}
+                            className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 flex items-center justify-center space-x-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                            <span>Ver Resultados</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        ) : (
+          <Card className="card-modern border-0">
+            <CardContent className="text-center py-12">
+              <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                {isAdmin
+                  ? 'Nenhum evento concluído encontrado'
+                  : 'Nenhum evento concluído disponível'}
+              </h3>
+              <p className="text-gray-500">
+                {isAdmin
+                  ? 'Eventos concluídos aparecerão aqui para geração de relatórios.'
+                  : 'Eventos concluídos que você participou aparecerão aqui.'}
+              </p>
             </CardContent>
           </Card>
-        </div>
+        )}
       </div>
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => {
+          setIsReportModalOpen(false)
+          setSelectedEvent(null)
+        }}
+        onSave={handleSaveReport}
+        event={selectedEvent}
+        existingReport={selectedEvent ? getEventReport(selectedEvent.id) : null}
+      />
+
+      <EventResultsModal
+        isOpen={isResultsModalOpen}
+        onClose={() => {
+          setIsResultsModalOpen(false)
+          setSelectedEvent(null)
+        }}
+        event={selectedEvent || { id: '', name: '', expectedResults: '' }}
+      />
     </div>
   )
 }

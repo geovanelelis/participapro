@@ -16,8 +16,13 @@ import {
   CheckCircle,
   AlertCircle,
   PlayCircle,
+  Megaphone,
+  Check,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from '@/contexts/authStore'
+import EventResultsModal from '@/components/ui/EventResultsModal'
+import EventRegistrationModal from '@/components/ui/EventRegistrationModal'
 
 interface NewEventData {
   name: string
@@ -30,7 +35,11 @@ interface NewEventData {
 }
 
 export default function EventosPage() {
-  const { events, addEvent, removeEvent } = useEventStore()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
+  const isParticipante = user?.role === 'participante'
+
+  const { events, addEvent, removeEvent, updateEvent } = useEventStore()
   const [activeTab, setActiveTab] = useState<'list' | 'create'>('list')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'ongoing' | 'completed'>(
@@ -48,12 +57,26 @@ export default function EventosPage() {
     expectedResults: '',
   })
 
+  const [isResultsModalOpen, setIsResultsModalOpen] = useState(false)
+  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState<any>(null)
+  const [registeredEvents, setRegisteredEvents] = useState<string[]>([])
+
   const filteredEvents = events.filter((event) => {
     const matchesSearch =
       event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.location.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || event.status === statusFilter
     const matchesType = typeFilter === 'all' || event.type === typeFilter
+
+    if (isParticipante) {
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesType &&
+        (event.active === true || event.status === 'completed')
+      )
+    }
 
     return matchesSearch && matchesStatus && matchesType
   })
@@ -68,6 +91,7 @@ export default function EventosPage() {
       id: Date.now().toString(),
       ...newEvent,
       status: 'upcoming' as const,
+      active: false,
     }
 
     addEvent(event)
@@ -81,6 +105,39 @@ export default function EventosPage() {
       expectedResults: '',
     })
     setActiveTab('list')
+  }
+
+  const handleRegisterForEvent = (eventId: string) => {
+    if (isParticipante) {
+      setSelectedEvent(events.find((e) => e.id === eventId))
+      setIsRegistrationModalOpen(true)
+    }
+  }
+
+  const handleConfirmRegistration = (eventId: string) => {
+    setRegisteredEvents((prev) => [...prev, eventId])
+    alert('Você se inscreveu no evento com sucesso!')
+  }
+
+  const handleToggleActive = (eventId: string) => {
+    const eventToUpdate = events.find((event) => event.id === eventId)
+    if (eventToUpdate) {
+      updateEvent({ ...eventToUpdate, active: !eventToUpdate.active })
+    }
+  }
+
+  const handleMarkAsCompleted = (eventId: string) => {
+    const eventToUpdate = events.find((event) => event.id === eventId)
+    if (eventToUpdate && eventToUpdate.status === 'ongoing') {
+      const confirmComplete = window.confirm(
+        `Tem certeza que deseja marcar o evento "${eventToUpdate.name}" como concluído? Esta ação não pode ser desfeita.`
+      )
+
+      if (confirmComplete) {
+        updateEvent({ ...eventToUpdate, status: 'completed' })
+        alert(`Evento "${eventToUpdate.name}" foi marcado como concluído com sucesso!`)
+      }
+    }
   }
 
   const getStatusIcon = (status: string) => {
@@ -122,6 +179,11 @@ export default function EventosPage() {
     }
   }
 
+  const handleViewResults = (event: any) => {
+    setSelectedEvent(event)
+    setIsResultsModalOpen(true)
+  }
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header Hero */}
@@ -148,13 +210,15 @@ export default function EventosPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={() => setActiveTab('create')}
-                  className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-6 py-3 rounded-xl transition-all duration-300 text-white font-medium"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>Novo Evento</span>
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => setActiveTab('create')}
+                    className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-6 py-3 rounded-xl transition-all duration-300 text-white font-medium"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>Novo Evento</span>
+                  </button>
+                )}
                 <button className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-6 py-3 rounded-xl transition-all duration-300 text-white font-medium">
                   <Download className="w-5 h-5" />
                   <span>Relatório</span>
@@ -166,75 +230,77 @@ export default function EventosPage() {
       </div>
 
       {/* Estatísticas Rápidas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="card-modern border-0 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-5"></div>
-          <CardContent className="p-6 relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-2xl bg-blue-50 text-blue-600">
-                <Calendar className="w-6 h-6" />
+      {isAdmin && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="card-modern border-0 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-5"></div>
+            <CardContent className="p-6 relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-2xl bg-blue-50 text-blue-600">
+                  <Calendar className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <span className="text-3xl font-bold text-gray-900">{events.length}</span>
+                  <p className="text-sm text-gray-600">Total de Eventos</p>
+                </div>
               </div>
-              <div className="text-right">
-                <span className="text-3xl font-bold text-gray-900">{events.length}</span>
-                <p className="text-sm text-gray-600">Total de Eventos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="card-modern border-0 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-5"></div>
-          <CardContent className="p-6 relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-2xl bg-green-50 text-green-600">
-                <PlayCircle className="w-6 h-6" />
+          <Card className="card-modern border-0 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-5"></div>
+            <CardContent className="p-6 relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-2xl bg-green-50 text-green-600">
+                  <PlayCircle className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <span className="text-3xl font-bold text-gray-900">
+                    {events.filter((e) => e.status === 'ongoing').length}
+                  </span>
+                  <p className="text-sm text-gray-600">Em Andamento</p>
+                </div>
               </div>
-              <div className="text-right">
-                <span className="text-3xl font-bold text-gray-900">
-                  {events.filter((e) => e.status === 'ongoing').length}
-                </span>
-                <p className="text-sm text-gray-600">Em Andamento</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="card-modern border-0 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-600 opacity-5"></div>
-          <CardContent className="p-6 relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-2xl bg-amber-50 text-amber-600">
-                <Clock className="w-6 h-6" />
+          <Card className="card-modern border-0 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-600 opacity-5"></div>
+            <CardContent className="p-6 relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-2xl bg-amber-50 text-amber-600">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <span className="text-3xl font-bold text-gray-900">
+                    {events.filter((e) => e.status === 'upcoming').length}
+                  </span>
+                  <p className="text-sm text-gray-600">Futuros</p>
+                </div>
               </div>
-              <div className="text-right">
-                <span className="text-3xl font-bold text-gray-900">
-                  {events.filter((e) => e.status === 'upcoming').length}
-                </span>
-                <p className="text-sm text-gray-600">Futuros</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="card-modern border-0 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-5"></div>
-          <CardContent className="p-6 relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-2xl bg-purple-50 text-purple-600">
-                <CheckCircle className="w-6 h-6" />
+          <Card className="card-modern border-0 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-5"></div>
+            <CardContent className="p-6 relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-2xl bg-purple-50 text-purple-600">
+                  <CheckCircle className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <span className="text-3xl font-bold text-gray-900">
+                    {events.filter((e) => e.status === 'completed').length}
+                  </span>
+                  <p className="text-sm text-gray-600">Concluídos</p>
+                </div>
               </div>
-              <div className="text-right">
-                <span className="text-3xl font-bold text-gray-900">
-                  {events.filter((e) => e.status === 'completed').length}
-                </span>
-                <p className="text-sm text-gray-600">Concluídos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-      {/* Tabs Navigation */}
+      {/* Lista de Eventos */}
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-xl w-fit">
         <button
           onClick={() => setActiveTab('list')}
@@ -246,19 +312,21 @@ export default function EventosPage() {
         >
           Lista de Eventos
         </button>
-        <button
-          onClick={() => setActiveTab('create')}
-          className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
-            activeTab === 'create'
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Cadastrar Evento
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setActiveTab('create')}
+            className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+              activeTab === 'create'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Cadastrar Evento
+          </button>
+        )}
       </div>
 
-      {/* Conteúdo das Tabs */}
+      {/* Conteúdo da Lista de Eventos */}
       {activeTab === 'list' ? (
         <div className="space-y-6">
           {/* Filtros e Busca */}
@@ -309,6 +377,7 @@ export default function EventosPage() {
               const endDate = new Date(event.endDate)
               const formattedStartDate = startDate.toLocaleDateString('pt-BR')
               const formattedEndDate = endDate.toLocaleDateString('pt-BR')
+              const isRegistered = registeredEvents.includes(event.id)
 
               return (
                 <Card
@@ -318,17 +387,9 @@ export default function EventosPage() {
                   <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center mb-2">
-                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mr-3">
-                            {event.name.charAt(0)}
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-gray-900 text-lg group-hover:text-purple-600 transition-colors">
-                              {event.name}
-                            </h3>
-                            <p className="text-sm text-gray-500">ID: {event.id}</p>
-                          </div>
-                        </div>
+                        <h3 className="font-bold text-gray-900 text-lg group-hover:text-purple-600 transition-colors">
+                          {event.name}
+                        </h3>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge
@@ -338,6 +399,13 @@ export default function EventosPage() {
                         >
                           {event.type}
                         </Badge>
+                        {isAdmin && (
+                          <Badge
+                            className={`badge-modern ${event.active ? 'badge-green' : 'badge-red'}`}
+                          >
+                            {event.active ? 'Ativo' : 'Inativo'}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </CardHeader>
@@ -370,21 +438,75 @@ export default function EventosPage() {
                       <p className="text-sm text-gray-600 line-clamp-2 mb-4">{event.description}</p>
 
                       <div className="flex items-center justify-between">
-                        <div className="flex space-x-2">
-                          <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                            <Edit className="w-4 h-4" />
-                          </button>
+                        <div className="flex flex-wrap gap-2">
+                          {isAdmin && (
+                            <button className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}
+                          {isAdmin && (
+                            <button
+                              onClick={() => removeEvent(event.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          {isAdmin && event.status === 'upcoming' && (
+                            <button
+                              onClick={() => handleToggleActive(event.id)}
+                              className={`p-2 flex items-center gap-1 ${
+                                event.active
+                                  ? 'text-red-600 bg-red-50 hover:bg-red-100'
+                                  : 'text-green-600 bg-green-50 hover:bg-green-100'
+                              } rounded-lg transition-colors`}
+                            >
+                              <Megaphone className="w-4 h-4" />{' '}
+                              {event.active ? 'Desativar' : 'Divulgar'}
+                            </button>
+                          )}
+
+                          {isAdmin && event.status === 'ongoing' && (
+                            <button
+                              onClick={() => handleMarkAsCompleted(event.id)}
+                              className="p-2 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                              title="Marcar como Concluído"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {isParticipante && event.status === 'upcoming' && !isRegistered && (
+                            <button
+                              onClick={() => handleRegisterForEvent(event.id)}
+                              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                            >
+                              Inscrever-se
+                            </button>
+                          )}
+                          {isParticipante && event.status === 'upcoming' && isRegistered && (
+                            <Badge className="badge-modern badge-green">Inscrito</Badge>
+                          )}
+                          {isParticipante && event.status === 'completed' && (
+                            <button
+                              onClick={() => handleViewResults(event)}
+                              className="p-2 flex items-center gap-2 text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                            >
+                              <Eye className="w-4 h-4" />
+                              <p className="text-sm">Ver Resultados</p>
+                            </button>
+                          )}
                         </div>
-                        <button
-                          onClick={() => removeEvent(event.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
                       </div>
+
+                      {isAdmin && event.status === 'ongoing' && (
+                        <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-xs text-yellow-700 flex items-center">
+                            <Clock className="w-3 h-3 mr-1" />
+                            Evento em andamento - Clique no ícone ✓ para marcar como concluído
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -405,127 +527,144 @@ export default function EventosPage() {
           )}
         </div>
       ) : (
-        /* Formulário de Cadastro */
-        <Card className="card-modern border-0">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-800 flex items-center">
-              <Plus className="w-5 h-5 mr-2 text-purple-600" />
-              Cadastrar Novo Evento
-            </CardTitle>
-            <p className="text-sm text-gray-600">Preencha as informações do evento</p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        isAdmin && (
+          /* Formulário de Cadastro */
+          <Card className="card-modern border-0">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-gray-800 flex items-center">
+                <Plus className="w-5 h-5 mr-2 text-purple-600" />
+                Cadastrar Novo Evento
+              </CardTitle>
+              <p className="text-sm text-gray-600">Preencha as informações do evento</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Nome do Evento *
+                  </label>
+                  <input
+                    type="text"
+                    value={newEvent.name}
+                    onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Digite o nome do evento"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Tipo do Evento *
+                  </label>
+                  <select
+                    value={newEvent.type}
+                    onChange={(e) =>
+                      setNewEvent({ ...newEvent, type: e.target.value as 'B2B' | 'B2C' })
+                    }
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="B2B">B2B (Business to Business)</option>
+                    <option value="B2C">B2C (Business to Consumer)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Data de Início *
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={newEvent.startDate}
+                    onChange={(e) => setNewEvent({ ...newEvent, startDate: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Data de Término *
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={newEvent.endDate}
+                    onChange={(e) => setNewEvent({ ...newEvent, endDate: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Nome do Evento *
+                  Local do Evento *
                 </label>
                 <input
                   type="text"
-                  value={newEvent.name}
-                  onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })}
+                  value={newEvent.location}
+                  onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Digite o nome do evento"
+                  placeholder="Digite o local do evento"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Tipo do Evento *
+                  Descrição do Evento
                 </label>
-                <select
-                  value={newEvent.type}
-                  onChange={(e) =>
-                    setNewEvent({ ...newEvent, type: e.target.value as 'B2B' | 'B2C' })
-                  }
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                <textarea
+                  value={newEvent.description}
+                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  placeholder="Descreva o evento, seus objetivos e características"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Resultados Esperados
+                </label>
+                <textarea
+                  value={newEvent.expectedResults}
+                  onChange={(e) => setNewEvent({ ...newEvent, expectedResults: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  placeholder="Descreva os resultados que espera alcançar com este evento"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+                <button
+                  onClick={() => setActiveTab('list')}
+                  className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
                 >
-                  <option value="B2B">B2B (Business to Business)</option>
-                  <option value="B2C">B2C (Business to Consumer)</option>
-                </select>
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCreateEvent}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-300 flex items-center space-x-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Cadastrar Evento</span>
+                </button>
               </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Data de Início *
-                </label>
-                <input
-                  type="datetime-local"
-                  value={newEvent.startDate}
-                  onChange={(e) => setNewEvent({ ...newEvent, startDate: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Data de Término *
-                </label>
-                <input
-                  type="datetime-local"
-                  value={newEvent.endDate}
-                  onChange={(e) => setNewEvent({ ...newEvent, endDate: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Local do Evento *
-              </label>
-              <input
-                type="text"
-                value={newEvent.location}
-                onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Digite o local do evento"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Descrição do Evento
-              </label>
-              <textarea
-                value={newEvent.description}
-                onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                rows={4}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                placeholder="Descreva o evento, seus objetivos e características"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Resultados Esperados
-              </label>
-              <textarea
-                value={newEvent.expectedResults}
-                onChange={(e) => setNewEvent({ ...newEvent, expectedResults: e.target.value })}
-                rows={3}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                placeholder="Descreva os resultados que espera alcançar com este evento"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
-              <button
-                onClick={() => setActiveTab('list')}
-                className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleCreateEvent}
-                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-300 flex items-center space-x-2"
-              >
-                <Plus className="w-5 h-5" />
-                <span>Cadastrar Evento</span>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )
+      )}
+      {selectedEvent && (
+        <EventResultsModal
+          isOpen={isResultsModalOpen}
+          onClose={() => setIsResultsModalOpen(false)}
+          event={selectedEvent}
+        />
+      )}
+      {selectedEvent && (
+        <EventRegistrationModal
+          isOpen={isRegistrationModalOpen}
+          onClose={() => setIsRegistrationModalOpen(false)}
+          onRegister={handleConfirmRegistration}
+          event={selectedEvent}
+        />
       )}
     </div>
   )
